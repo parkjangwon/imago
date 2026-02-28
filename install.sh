@@ -4,7 +4,9 @@ set -euo pipefail
 REPO="${IMAGO_REPO:-parkjangwon/imago}"
 VERSION="${IMAGO_VERSION:-latest}"
 BINARY_NAME="imago"
-INSTALL_DIR="${IMAGO_INSTALL_DIR:-/usr/local/bin}"
+DEFAULT_INSTALL_DIR="/usr/local/bin"
+FALLBACK_INSTALL_DIR="${HOME}/.local/bin"
+INSTALL_DIR="${IMAGO_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 
 if [[ "${1:-}" == "--help" ]]; then
   cat <<USAGE
@@ -16,7 +18,7 @@ Usage:
 Env vars:
   IMAGO_REPO         GitHub repo (default: parkjangwon/imago)
   IMAGO_VERSION      Tag like v1.0.0 or latest (default: latest)
-  IMAGO_INSTALL_DIR  Install dir (default: /usr/local/bin)
+  IMAGO_INSTALL_DIR  Install dir (default: /usr/local/bin, auto-fallback to ~/.local/bin)
 USAGE
   exit 0
 fi
@@ -88,12 +90,39 @@ if [[ ! -f "$SRC" ]]; then
   exit 1
 fi
 
-mkdir -p "$INSTALL_DIR"
+install_binary_unix() {
+  local src="$1"
+  local dst_dir="$2"
+  mkdir -p "$dst_dir"
+  install -m 755 "$src" "$dst_dir/$BINARY_NAME"
+  echo "✅ Installed to $dst_dir/$BINARY_NAME"
+  "$dst_dir/$BINARY_NAME" --version || true
+
+  case ":$PATH:" in
+    *":$dst_dir:"*) ;;
+    *)
+      echo "ℹ️  '$dst_dir' is not in PATH."
+      echo "   Add this line to your shell profile (~/.zshrc or ~/.bashrc):"
+      echo "   export PATH=\"$dst_dir:\$PATH\""
+      ;;
+  esac
+}
+
 if [[ "$OS" == "Darwin" || "$OS" == "Linux" ]]; then
-  install -m 755 "$SRC" "$INSTALL_DIR/$BINARY_NAME"
-  echo "✅ Installed to $INSTALL_DIR/$BINARY_NAME"
-  "$INSTALL_DIR/$BINARY_NAME" --version || true
+  if [[ -n "${IMAGO_INSTALL_DIR:-}" ]]; then
+    # User explicitly chose a dir: fail fast if it doesn't work.
+    install_binary_unix "$SRC" "$INSTALL_DIR"
+  else
+    # Default behavior: try /usr/local/bin, fallback to ~/.local/bin on permission errors.
+    if install_binary_unix "$SRC" "$INSTALL_DIR" 2>/dev/null; then
+      :
+    else
+      echo "⚠️  No write permission to $INSTALL_DIR. Falling back to $FALLBACK_INSTALL_DIR"
+      install_binary_unix "$SRC" "$FALLBACK_INSTALL_DIR"
+    fi
+  fi
 else
+  mkdir -p "$INSTALL_DIR"
   cp "$SRC" "$INSTALL_DIR/${BINARY_NAME}.exe"
   echo "✅ Installed to $INSTALL_DIR/${BINARY_NAME}.exe"
 fi

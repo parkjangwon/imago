@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(
     name = "imago",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     author = "Imago Contributors",
     about = "Generate images using Gemini Image Generation API with instant terminal preview",
     long_about = r#"
