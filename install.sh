@@ -8,7 +8,7 @@ DEFAULT_INSTALL_DIR="/usr/local/bin"
 FALLBACK_INSTALL_DIR="${HOME}/.local/bin"
 INSTALL_DIR="${IMAGO_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 
-ACTION="install" # install|update|uninstall
+ACTION="install" # install|uninstall
 
 for arg in "$@"; do
   case "$arg" in
@@ -20,14 +20,10 @@ Usage:
   # install latest
   curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash
 
-  # update to latest
-  curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --update
-
   # uninstall
   curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --uninstall
 
 Options:
-  --update       Install latest release (same as install, but logs current version first)
   --uninstall    Remove installed binary
   --help         Show this help
 
@@ -37,9 +33,6 @@ Env vars:
   IMAGO_INSTALL_DIR  Install dir (default: /usr/local/bin, auto-fallback to ~/.local/bin)
 USAGE
       exit 0
-      ;;
-    --update)
-      ACTION="update"
       ;;
     --uninstall)
       ACTION="uninstall"
@@ -152,14 +145,6 @@ install_binary_unix() {
       ;;
   esac
 }
-
-if [[ "$ACTION" == "update" ]]; then
-  if command -v "$BINARY_NAME" >/dev/null 2>&1; then
-    echo "Current: $($BINARY_NAME --version || true)"
-  else
-    echo "Current: not installed"
-  fi
-fi
 
 resolve_os_target
 
