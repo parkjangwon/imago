@@ -8,60 +8,163 @@ DEFAULT_INSTALL_DIR="/usr/local/bin"
 FALLBACK_INSTALL_DIR="${HOME}/.local/bin"
 INSTALL_DIR="${IMAGO_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 
-if [[ "${1:-}" == "--help" ]]; then
-  cat <<USAGE
+ACTION="install" # install|update|uninstall
+
+for arg in "$@"; do
+  case "$arg" in
+    --help|-h)
+      cat <<USAGE
 imago installer
 
 Usage:
+  # install latest
   curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash
+
+  # update to latest
+  curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --update
+
+  # uninstall
+  curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --uninstall
+
+Options:
+  --update       Install latest release (same as install, but logs current version first)
+  --uninstall    Remove installed binary
+  --help         Show this help
 
 Env vars:
   IMAGO_REPO         GitHub repo (default: parkjangwon/imago)
   IMAGO_VERSION      Tag like v1.0.0 or latest (default: latest)
   IMAGO_INSTALL_DIR  Install dir (default: /usr/local/bin, auto-fallback to ~/.local/bin)
 USAGE
+      exit 0
+      ;;
+    --update)
+      ACTION="update"
+      ;;
+    --uninstall)
+      ACTION="uninstall"
+      ;;
+    *)
+      echo "Unknown option: $arg" >&2
+      echo "Run with --help for usage." >&2
+      exit 1
+      ;;
+  esac
+done
+
+remove_binary() {
+  local target="$1"
+  if [[ -f "$target" ]]; then
+    rm -f "$target"
+    echo "✅ Removed: $target"
+    return 0
+  fi
+  return 1
+}
+
+uninstall_imago() {
+  local removed=0
+
+  # Explicit directory first (if provided)
+  if [[ -n "${IMAGO_INSTALL_DIR:-}" ]]; then
+    if remove_binary "$IMAGO_INSTALL_DIR/$BINARY_NAME" || remove_binary "$IMAGO_INSTALL_DIR/${BINARY_NAME}.exe"; then
+      removed=1
+    fi
+  fi
+
+  # Common install paths
+  for p in "$DEFAULT_INSTALL_DIR/$BINARY_NAME" "$FALLBACK_INSTALL_DIR/$BINARY_NAME" \
+           "$DEFAULT_INSTALL_DIR/${BINARY_NAME}.exe" "$FALLBACK_INSTALL_DIR/${BINARY_NAME}.exe"; do
+    if remove_binary "$p"; then
+      removed=1
+    fi
+  done
+
+  if [[ "$removed" -eq 0 ]]; then
+    echo "ℹ️  No installed '$BINARY_NAME' binary found in known paths."
+  fi
+}
+
+if [[ "$ACTION" == "uninstall" ]]; then
+  uninstall_imago
   exit 0
 fi
 
-OS="$(uname -s)"
-ARCH="$(uname -m)"
+resolve_os_target() {
+  local os arch
+  os="$(uname -s)"
+  arch="$(uname -m)"
 
-case "$OS" in
-  Darwin)
-    if [[ "$ARCH" == "arm64" ]]; then
-      TARGET="aarch64-apple-darwin"
-      EXT="tar.gz"
-    else
-      echo "Unsupported macOS arch: $ARCH (only Apple Silicon supported)" >&2
+  case "$os" in
+    Darwin)
+      if [[ "$arch" == "arm64" ]]; then
+        TARGET="aarch64-apple-darwin"
+        EXT="tar.gz"
+      else
+        echo "Unsupported macOS arch: $arch (only Apple Silicon supported)" >&2
+        exit 1
+      fi
+      ;;
+    Linux)
+      if [[ "$arch" == "x86_64" ]]; then
+        TARGET="x86_64-unknown-linux-gnu"
+        EXT="tar.gz"
+      else
+        echo "Unsupported Linux arch: $arch (only x86_64 supported)" >&2
+        exit 1
+      fi
+      ;;
+    MINGW*|MSYS*|CYGWIN*|Windows_NT)
+      TARGET="x86_64-pc-windows-msvc"
+      EXT="zip"
+      ;;
+    *)
+      echo "Unsupported OS: $os" >&2
       exit 1
-    fi
-    ;;
-  Linux)
-    if [[ "$ARCH" == "x86_64" ]]; then
-      TARGET="x86_64-unknown-linux-gnu"
-      EXT="tar.gz"
-    else
-      echo "Unsupported Linux arch: $ARCH (only x86_64 supported)" >&2
-      exit 1
-    fi
-    ;;
-  MINGW*|MSYS*|CYGWIN*|Windows_NT)
-    TARGET="x86_64-pc-windows-msvc"
-    EXT="zip"
-    ;;
-  *)
-    echo "Unsupported OS: $OS" >&2
+      ;;
+  esac
+}
+
+resolve_latest_tag() {
+  local tag
+  tag="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p' | head -n1)"
+  if [[ -z "$tag" ]]; then
+    echo "Could not resolve release version." >&2
     exit 1
-    ;;
-esac
+  fi
+  echo "$tag"
+}
 
-if [[ "$VERSION" == "latest" ]]; then
-  VERSION="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p' | head -n1)"
+install_binary_unix() {
+  local src="$1"
+  local dst_dir="$2"
+  mkdir -p "$dst_dir"
+  install -m 755 "$src" "$dst_dir/$BINARY_NAME"
+  echo "✅ Installed to $dst_dir/$BINARY_NAME"
+  "$dst_dir/$BINARY_NAME" --version || true
+
+  case ":$PATH:" in
+    *":$dst_dir:"*) ;;
+    *)
+      echo "ℹ️  '$dst_dir' is not in PATH."
+      echo "   Add this line to your shell profile (~/.zshrc or ~/.bashrc):"
+      echo "   export PATH=\"$dst_dir:\$PATH\""
+      ;;
+  esac
+}
+
+if [[ "$ACTION" == "update" ]]; then
+  if command -v "$BINARY_NAME" >/dev/null 2>&1; then
+    echo "Current: $($BINARY_NAME --version || true)"
+  else
+    echo "Current: not installed"
+  fi
 fi
 
-if [[ -z "$VERSION" ]]; then
-  echo "Could not resolve release version." >&2
-  exit 1
+resolve_os_target
+
+if [[ "$VERSION" == "latest" ]]; then
+  VERSION="$(resolve_latest_tag)"
 fi
 
 ASSET="${BINARY_NAME}-${TARGET}.${EXT}"
@@ -90,24 +193,7 @@ if [[ ! -f "$SRC" ]]; then
   exit 1
 fi
 
-install_binary_unix() {
-  local src="$1"
-  local dst_dir="$2"
-  mkdir -p "$dst_dir"
-  install -m 755 "$src" "$dst_dir/$BINARY_NAME"
-  echo "✅ Installed to $dst_dir/$BINARY_NAME"
-  "$dst_dir/$BINARY_NAME" --version || true
-
-  case ":$PATH:" in
-    *":$dst_dir:"*) ;;
-    *)
-      echo "ℹ️  '$dst_dir' is not in PATH."
-      echo "   Add this line to your shell profile (~/.zshrc or ~/.bashrc):"
-      echo "   export PATH=\"$dst_dir:\$PATH\""
-      ;;
-  esac
-}
-
+OS="$(uname -s)"
 if [[ "$OS" == "Darwin" || "$OS" == "Linux" ]]; then
   if [[ -n "${IMAGO_INSTALL_DIR:-}" ]]; then
     # User explicitly chose a dir: fail fast if it doesn't work.
