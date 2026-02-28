@@ -1,0 +1,27 @@
+# Rust build artifacts
+/target/
+
+# Cargo backup (rare)
+**/*.rs.bk
+
+# macOS
+.DS_Store
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime generated images in project root
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+
