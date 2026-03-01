@@ -22,9 +22,16 @@ Rust 기반 CLI 이미지 생성기. Gemini Image Generation API를 사용해 �
 export GEMINI_API_KEY="your_api_key"
 ```
 
-## 설치
+## 설치 / 업데이트 / 삭제
+
+설치와 업데이트는 동일한 명령을 사용한다. (재실행 시 최신 릴리스로 갱신)
 ```bash
 curl -fsSL https://raw.githubusercontent.com/parkjangwon/imago/main/install.sh | bash
+```
+
+삭제:
+```bash
+curl -fsSL https://raw.githubusercontent.com/parkjangwon/imago/main/install.sh | bash -s -- --uninstall
 ```
 
 ## 빌드

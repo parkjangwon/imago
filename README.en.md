@@ -22,9 +22,16 @@ Environment variable:
 export GEMINI_API_KEY="your_api_key"
 ```
 
-## Installation
+## Install / Update / Uninstall
+
+Install and update use the same command. (Re-run to upgrade to the latest release)
 ```bash
 curl -fsSL https://raw.githubusercontent.com/parkjangwon/imago/main/install.sh | bash
+```
+
+Uninstall:
+```bash
+curl -fsSL https://raw.githubusercontent.com/parkjangwon/imago/main/install.sh | bash -s -- --uninstall
 ```
 
 ## Build
