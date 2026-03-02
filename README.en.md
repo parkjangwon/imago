@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![CLI](https://img.shields.io/badge/Type-CLI-blue)](#)
 
+<img width="783" height="689" alt="image" src="https://github.com/user-attachments/assets/e01e662a-ae97-43cd-a754-feb8002a49a8" />
+
 A Rust CLI image generator powered by the Gemini Image Generation API, with optional terminal preview.
 
 ## Features
