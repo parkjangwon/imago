@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![CLI](https://img.shields.io/badge/Type-CLI-blue)](#)
 
+<img width="783" height="689" alt="image" src="https://github.com/user-attachments/assets/f0d8be21-6f9d-4c7f-a27d-a9d6a92538f0" />
+
 Rust 기반 CLI 이미지 생성기. Gemini Image Generation API를 사용해 프롬프트로 이미지를 만들고, 터미널 미리보기(선택)를 지원한다.
 
 ## 주요 기능
