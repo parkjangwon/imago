@@ -67,7 +67,7 @@ pub struct Cli {
         short = 'm',
         long = "model",
         value_name = "MODEL",
-        default_value = "gemini-2.5-flash-image",
+        default_value = "gemini-3.1-flash-image",
         help = "Gemini model to use for image generation"
     )]
     pub model: String,

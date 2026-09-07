@@ -64,7 +64,7 @@ imago "product mockup on white desk" --no-preview
 
 Specify model (optional):
 ```bash
-imago "futuristic interface concept" --model gemini-2.5-flash-image
+imago "futuristic interface concept" --model gemini-3.1-flash-image
 ```
 
 ## CLI Options
@@ -80,7 +80,7 @@ Options:
   -H, --height <ROWS>          Terminal preview height (optional)
       --no-preview             Disable terminal preview
   -m, --model <MODEL>          Gemini model to use
-                                (default: gemini-2.5-flash-image)
+                                (default: gemini-3.1-flash-image)
   -k, --api-key <KEY>          API key override (higher priority than env)
   -v, --verbose                Verbose output
       --no-color               Disable colored output
@@ -90,10 +90,12 @@ Options:
 
 ## Model Fallback
 If the requested model returns 404, imago retries with fallback models in order:
+- gemini-3.1-flash-image
+- gemini-3-pro-image
+- gemini-3.1-flash-lite-image
 - gemini-2.5-flash-image
 - gemini-3.1-flash-image-preview
 - gemini-3-pro-image-preview
-- gemini-2.0-flash-exp-image-generation
 
 ## Troubleshooting
 ### 1) `GEMINI_API_KEY` error

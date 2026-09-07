@@ -66,7 +66,7 @@ imago "product mockup on white desk" --no-preview
 
 모델 지정(선택):
 ```bash
-imago "futuristic interface concept" --model gemini-2.5-flash-image
+imago "futuristic interface concept" --model gemini-3.1-flash-image
 ```
 
 ## 옵션
@@ -82,7 +82,7 @@ Options:
   -H, --height <ROWS>          터미널 프리뷰 높이 (선택)
       --no-preview             터미널 프리뷰 비활성화
   -m, --model <MODEL>          사용할 Gemini 모델
-                                (기본: gemini-2.5-flash-image)
+                                (기본: gemini-3.1-flash-image)
   -k, --api-key <KEY>          API 키 직접 지정 (환경변수보다 우선)
   -v, --verbose                상세 로그 출력
       --no-color               컬러 출력 비활성화
@@ -92,10 +92,12 @@ Options:
 
 ## 모델 fallback
 기본 모델 요청이 404일 경우, 내부 fallback 모델을 순서대로 시도한다.
+- gemini-3.1-flash-image
+- gemini-3-pro-image
+- gemini-3.1-flash-lite-image
 - gemini-2.5-flash-image
 - gemini-3.1-flash-image-preview
 - gemini-3-pro-image-preview
-- gemini-2.0-flash-exp-image-generation
 
 ## 트러블슈팅
 ### 1) `GEMINI_API_KEY` 관련 오류

@@ -6,11 +6,13 @@ use std::time::Duration;
 
 const API_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta/models";
 const DEFAULT_TIMEOUT: u64 = 120;
-const MODEL_FALLBACKS: [&str; 4] = [
+const MODEL_FALLBACKS: [&str; 6] = [
+    "gemini-3.1-flash-image",
+    "gemini-3-pro-image",
+    "gemini-3.1-flash-lite-image",
     "gemini-2.5-flash-image",
     "gemini-3.1-flash-image-preview",
     "gemini-3-pro-image-preview",
-    "gemini-2.0-flash-exp-image-generation",
 ];
 
 /// Gemini API client
